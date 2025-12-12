@@ -1,4 +1,4 @@
-package com.innowise.rudkovskii.service;
+package com.innowise.rudkovskii.service.db;
 
 import com.innowise.rudkovskii.entity.Payment;
 import com.innowise.rudkovskii.repository.PaymentRepository;
@@ -22,6 +22,10 @@ public class PaymentService {
     @Transactional
     public Payment createPayment(Payment payment){
         return repository.save(payment);
+    }
+
+    public Payment getPaymentById(Long id){
+        return repository.findById(id).orElseThrow(() -> new RuntimeException("Payment " + id));
     }
 
     public List<Payment> getPaymentsByOrderId(Long orderId){

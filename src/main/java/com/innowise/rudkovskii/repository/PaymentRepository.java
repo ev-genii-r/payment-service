@@ -1,9 +1,8 @@
 package com.innowise.rudkovskii.repository;
 
 import com.innowise.rudkovskii.entity.Payment;
-import org.springframework.data.domain.Page;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.mongodb.repository.Aggregation;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -11,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface PaymentRepository extends JpaRepository<Payment, Long> {
+public interface PaymentRepository extends MongoRepository<Payment, Long> {
 
     List<Payment> findPaymentsByOrderId(long orderId);
 
@@ -19,7 +18,10 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     List<Payment> findPaymentsByStatus(String status);
 
-    @Query("SELECT SUM(p.amount) FROM Payment p WHERE p.timestamp BETWEEN :startDate AND :endDate")
+    @Aggregation(pipeline = {
+            "{ $match: { timestamp: { $gte: ?0, $lte: ?1 } } }",
+            "{ $group: { _id: null, totalAmount: { $sum: '$paymentAmount' } } }"
+    })
     Double getTotalSumByDatePeriod(@Param("startDate") LocalDateTime startDate,
                                    @Param("endDate") LocalDateTime endDate);
 

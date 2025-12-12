@@ -1,17 +1,20 @@
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/payment-service
-    username: postgres
-    password: kvasik225
-    driver-class-name: org.postgresql.Driver
-
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/payment-service
+#    username: postgres
+#    password: kvasik225
+#    driver-class-name: org.postgresql.Driver
+#  jpa:
+#    hibernate:
+#      ddl-auto: none
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        format_sql: true
+  mongodb:
+    host: localhost
+    port: 27017
+    database: payment-service
 
 server:
   port: 8084

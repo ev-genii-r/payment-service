@@ -2,37 +2,40 @@ package com.innowise.rudkovskii.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
 
-@Table(name = "payments")
-@Entity
+@Document(collection = "payments")
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode
-@ToString
 public class Payment {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(name = "order_id")
+    @Indexed
+    @Field("order_id")
     private long orderId;
 
-    @Column(name = "user_id")
+    @Indexed
+    @Field("user_id")
     private long userId;
 
-    @Column(name = "status")
+    @Indexed
+    @Field("status")
     private String status;
 
-    @Column(name = "timestamp")
+    @Indexed
+    @Field("timestamp")
     private LocalDateTime timestamp;
 
-    @Column(name = "payment_amount")
+    @Indexed
+    @Field("payment_amount")
     private double amount;
 
 }
