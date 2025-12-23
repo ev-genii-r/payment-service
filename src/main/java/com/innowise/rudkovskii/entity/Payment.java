@@ -16,15 +16,15 @@ import java.time.LocalDateTime;
 public class Payment {
 
     @Id
-    private long id;
+    private String id;
 
     @Indexed
     @Field("order_id")
-    private long orderId;
+    private String orderId;
 
     @Indexed
     @Field("user_id")
-    private long userId;
+    private String userId;
 
     @Indexed
     @Field("status")

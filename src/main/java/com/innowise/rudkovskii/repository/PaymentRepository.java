@@ -10,11 +10,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface PaymentRepository extends MongoRepository<Payment, Long> {
+public interface PaymentRepository extends MongoRepository<Payment, String> {
 
-    List<Payment> findPaymentsByOrderId(long orderId);
+    List<Payment> findPaymentsByOrderId(String orderId);
 
-    List<Payment> findPaymentsByUserId(long userId);
+    List<Payment> findPaymentsByUserId(String userId);
 
     List<Payment> findPaymentsByStatus(String status);
 

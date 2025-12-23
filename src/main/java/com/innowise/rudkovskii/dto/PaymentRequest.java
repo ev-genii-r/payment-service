@@ -1,22 +1,20 @@
 package com.innowise.rudkovskii.dto;
 
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Data
+@AllArgsConstructor
 public class PaymentRequest {
 
     @PositiveOrZero(message = "User ID is required")
-    private long userId;
+    private String userId;
 
     @PositiveOrZero(message = "Order ID is required")
-    private long orderId;
-
-//    @NotNull(message = "Status is required")
-//    @NotBlank
-//    private String Status;
+    private String orderId;
 
     @NotNull(message = "Timestamp is required")
     @PastOrPresent(message = "Timestamp should be in the past")

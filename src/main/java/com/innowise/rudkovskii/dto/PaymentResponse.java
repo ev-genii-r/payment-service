@@ -7,9 +7,9 @@ import java.time.LocalDateTime;
 @Data
 public class PaymentResponse {
 
-    private long id;
-    private long userId;
-    private long orderId;
+    private String id;
+    private String userId;
+    private String orderId;
     private String Status;
     private LocalDateTime timestamp;
     private double amount;
