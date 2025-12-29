@@ -66,7 +66,6 @@ class PaymentEventProducerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Настройка тестового потребителя Kafka
         Properties consumerProps = new Properties();
         consumerProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
         consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, "test-consumer-group");
@@ -89,17 +88,13 @@ class PaymentEventProducerIntegrationTest {
 
     @Test
     void shouldSuccessfullySendPaymentEventToKafka() throws InterruptedException {
-        // Given
         PaymentResponse paymentResponse = createTestPaymentResponse();
         String orderId = "test-order-123";
 
-        // When
         paymentEventProducer.sendPaymentCreatedEvent(paymentResponse, orderId);
 
-        // Then - ждем отправки сообщения
-        Thread.sleep(2000); // Даем время на отправку
+        Thread.sleep(2000);
 
-        // Проверяем, что сообщение получено в Kafka
         ConsumerRecords<String, PaymentEvent> records = testConsumer.poll(Duration.ofSeconds(5));
 
         assertThat(records).isNotEmpty();
@@ -113,7 +108,6 @@ class PaymentEventProducerIntegrationTest {
 
     @Test
     void shouldSendMultiplePaymentEvents() throws InterruptedException {
-        // Given
         PaymentResponse payment1 = createTestPaymentResponse();
         payment1.setId("payment-1");
         payment1.setOrderId("order-1");
@@ -122,18 +116,15 @@ class PaymentEventProducerIntegrationTest {
         payment2.setId("payment-2");
         payment2.setOrderId("order-2");
 
-        // When
         paymentEventProducer.sendPaymentCreatedEvent(payment1, payment1.getOrderId());
         paymentEventProducer.sendPaymentCreatedEvent(payment2, payment2.getOrderId());
 
-        // Then
-        Thread.sleep(3000); // Даем время на отправку
+        Thread.sleep(3000);
 
         ConsumerRecords<String, PaymentEvent> records = testConsumer.poll(Duration.ofSeconds(5));
 
         assertThat(records.count()).isEqualTo(2);
 
-        // Проверяем, что оба сообщения получены
         boolean foundPayment1 = false;
         boolean foundPayment2 = false;
 
@@ -154,16 +145,12 @@ class PaymentEventProducerIntegrationTest {
 
     @Test
     void shouldLogSuccessfulMessageSending() {
-        // Given
         PaymentResponse paymentResponse = createTestPaymentResponse();
         String orderId = "test-order-456";
 
-        // Когда
         paymentEventProducer.sendPaymentCreatedEvent(paymentResponse, orderId);
 
-        // Тогда - ждем завершения асинхронной отправки
         await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
-            // Проверяем, что сообщение отправлено
             ConsumerRecords<String, PaymentEvent> records = testConsumer.poll(Duration.ofMillis(100));
             assertThat(records).isNotEmpty();
         });
@@ -171,21 +158,16 @@ class PaymentEventProducerIntegrationTest {
 
     @Test
     void shouldHandleSendFailureGracefully() throws Exception {
-        // Given
         PaymentResponse paymentResponse = createTestPaymentResponse();
         String orderId = "test-order-789";
 
-        // Когда - временно останавливаем Kafka
         kafka.stop();
 
         try {
-            // Пытаемся отправить сообщение
             CountDownLatch latch = new CountDownLatch(1);
-            // Можем проверить через мок, если используем SpyBean
         } finally {
-            // Возвращаем Kafka обратно
             kafka.start();
-            Thread.sleep(5000); // Даем время на запуск
+            Thread.sleep(5000);
         }
     }
 

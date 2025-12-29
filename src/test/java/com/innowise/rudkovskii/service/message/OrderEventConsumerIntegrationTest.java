@@ -85,10 +85,8 @@ class OrderEventConsumerIntegrationTest {
 
     @DynamicPropertySource
     static void dynamicProperties(DynamicPropertyRegistry registry) {
-        // Настройка MongoDB контейнера
         registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
 
-        // Настройка WireMock
         wireMockServer = new WireMockServer(0);
         wireMockServer.start();
         WireMock.configureFor("localhost", wireMockServer.port());
@@ -97,13 +95,10 @@ class OrderEventConsumerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Очищаем базу данных перед каждым тестом
         paymentRepository.deleteAll();
 
-        // Сбрасываем моки
         wireMockServer.resetAll();
 
-        // Настраиваем базовый мок для внешнего сервиса
         wireMockServer.stubFor(
                 post(urlEqualTo("/api/payments/process"))
                         .willReturn(aResponse()
@@ -122,7 +117,6 @@ class OrderEventConsumerIntegrationTest {
 
     @Test
     void shouldProcessOrderEventAndCreatePayment() throws JsonProcessingException {
-        // Given
         OrderEvent orderEvent = new OrderEvent(
                 "event-123",
                 "order-456",
@@ -131,12 +125,9 @@ class OrderEventConsumerIntegrationTest {
                 LocalDateTime.now()
         );
 
-        // When
         kafkaTemplate.send("order-created", orderEvent.getOrderId(), orderEvent);
 
-        // Then
         await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
-            // Проверяем, что платеж сохранен в MongoDB
             Optional<Payment> savedPaymentOpt = paymentRepository.findPaymentByOrderId(orderEvent.getOrderId());
             assertThat(savedPaymentOpt).isPresent();
 
@@ -146,7 +137,6 @@ class OrderEventConsumerIntegrationTest {
             assertThat(savedPayment.getAmount()).isEqualTo(orderEvent.getAmount());
             assertThat(savedPayment.getStatus()).isIn("SUCCESS", "FAILED", "PENDING");
 
-            // Проверяем вызовы сервисов
             verify(paymentService, times(1))
                     .createPayment(any(), eq(savedPayment.getStatus()));
 
@@ -154,13 +144,11 @@ class OrderEventConsumerIntegrationTest {
                     .sendPaymentCreatedEvent(any(PaymentResponse.class), eq(orderEvent.getOrderId()));
         });
 
-        // Проверяем вызовы WireMock
         wireMockServer.verify(1, postRequestedFor(urlEqualTo("/api/payments/process")));
     }
 
     @Test
     void shouldHandleExternalServiceFailure() throws JsonProcessingException {
-        // Given
         OrderEvent orderEvent = new OrderEvent(
                 "event-123",
                 "order-456",
@@ -169,19 +157,15 @@ class OrderEventConsumerIntegrationTest {
                 LocalDateTime.now()
         );
 
-        // Мокаем ошибку внешнего сервиса
         wireMockServer.resetAll();
         wireMockServer.stubFor(
                 post(urlEqualTo("/api/payments/process"))
                         .willReturn(aResponse().withStatus(500))
         );
 
-        // When
         kafkaTemplate.send("order-created", orderEvent.getOrderId(), orderEvent);
 
-        // Then
         await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
-            // Платеж должен быть создан с статусом FAILED
             Optional<Payment> savedPaymentOpt = paymentRepository.findPaymentByOrderId(orderEvent.getOrderId());
             assertThat(savedPaymentOpt).isPresent();
 
@@ -192,7 +176,6 @@ class OrderEventConsumerIntegrationTest {
 
     @Test
     void shouldProcessMultipleOrderEvents() throws JsonProcessingException {
-        // Given
         OrderEvent event1 = new OrderEvent(
                 "event-1",
                 "order-1",
@@ -209,11 +192,9 @@ class OrderEventConsumerIntegrationTest {
                 LocalDateTime.now()
         );
 
-        // When
         kafkaTemplate.send("order-created", event1.getOrderId(), event1);
         kafkaTemplate.send("order-created", event2.getOrderId(), event2);
 
-        // Then
         await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
             assertThat(paymentRepository.count()).isEqualTo(2);
 
@@ -230,7 +211,6 @@ class OrderEventConsumerIntegrationTest {
 
     @Test
     void shouldHandleDuplicateOrderEvents() throws JsonProcessingException {
-        // Given
         OrderEvent orderEvent = new OrderEvent(
                 "event-123",
                 "order-456",
@@ -239,20 +219,16 @@ class OrderEventConsumerIntegrationTest {
                 LocalDateTime.now()
         );
 
-        // When - отправляем одинаковое событие дважды
         kafkaTemplate.send("order-created", orderEvent.getOrderId(), orderEvent);
         kafkaTemplate.send("order-created", orderEvent.getOrderId(), orderEvent);
 
-        // Then
         await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
-            // Должен быть создан только один платеж
             assertThat(paymentRepository.count()).isEqualTo(1);
         });
     }
 
     @Test
     void shouldHandleDifferentPaymentStatuses() throws JsonProcessingException {
-        // Given
         OrderEvent orderEvent = new OrderEvent(
                 "event-123",
                 "order-456",
@@ -261,13 +237,8 @@ class OrderEventConsumerIntegrationTest {
                 LocalDateTime.now()
         );
 
-        // Когда StatusResolver генерирует разные статусы
-        // Мы тестируем, что любой статус корректно обрабатывается
-
-        // When
         kafkaTemplate.send("order-created", orderEvent.getOrderId(), orderEvent);
 
-        // Then
         await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
             Optional<Payment> savedPaymentOpt = paymentRepository.findPaymentByOrderId(orderEvent.getOrderId());
             assertThat(savedPaymentOpt).isPresent();

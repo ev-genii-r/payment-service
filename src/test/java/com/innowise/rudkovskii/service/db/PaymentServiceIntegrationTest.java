@@ -43,23 +43,19 @@ class PaymentServiceIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Очищаем базу перед каждым тестом
         paymentRepository.deleteAll();
     }
 
     @Test
     void shouldCreatePaymentSuccessfully() {
-        // Given
         PaymentRequest paymentRequest = new PaymentRequest();
         paymentRequest.setUserId("user-123");
         paymentRequest.setOrderId("order-456");
         paymentRequest.setAmount(150.75);
         paymentRequest.setTimestamp(LocalDateTime.now());
 
-        // When
         Payment createdPayment = paymentService.createPayment(paymentRequest);
 
-        // Then
         assertThat(createdPayment).isNotNull();
         assertThat(createdPayment.getId()).isNotNull();
         assertThat(createdPayment.getUserId()).isEqualTo("user-123");
@@ -68,34 +64,28 @@ class PaymentServiceIntegrationTest {
         assertThat(createdPayment.getStatus()).isNotNull();
         assertThat(createdPayment.getTimestamp()).isNotNull();
 
-        // Verify in database
         Payment savedPayment = paymentRepository.findById(createdPayment.getId()).orElseThrow();
         assertThat(savedPayment).isEqualTo(createdPayment);
     }
 
     @Test
     void shouldCreatePaymentWithSpecificStatus() {
-        // Given
         PaymentRequest paymentRequest = new PaymentRequest();
         paymentRequest.setUserId("user-123");
         paymentRequest.setOrderId("order-456");
         paymentRequest.setAmount(200.0);
         paymentRequest.setTimestamp(LocalDateTime.now());
 
-        // When
         Payment createdPayment = paymentService.createPayment(paymentRequest, "COMPLETED");
 
-        // Then
         assertThat(createdPayment.getStatus()).isEqualTo("COMPLETED");
 
-        // Verify in database
         Payment savedPayment = paymentRepository.findById(createdPayment.getId()).orElseThrow();
         assertThat(savedPayment.getStatus()).isEqualTo("COMPLETED");
     }
 
     @Test
     void shouldFindPaymentById() {
-        // Given
         Payment payment = new Payment();
         payment.setUserId("user-123");
         payment.setOrderId("order-456");
@@ -104,10 +94,8 @@ class PaymentServiceIntegrationTest {
         payment.setTimestamp(LocalDateTime.now());
         Payment savedPayment = paymentRepository.save(payment);
 
-        // When
         Payment foundPayment = paymentService.getPaymentById(savedPayment.getId());
 
-        // Then
         assertThat(foundPayment).isNotNull();
         assertThat(foundPayment.getId()).isEqualTo(savedPayment.getId());
         assertThat(foundPayment.getUserId()).isEqualTo("user-123");
@@ -116,7 +104,6 @@ class PaymentServiceIntegrationTest {
 
     @Test
     void shouldThrowExceptionWhenPaymentNotFound() {
-        // When & Then
         assertThatThrownBy(() -> paymentService.getPaymentById("non-existent-id"))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Payment non-existent-id not found");
@@ -124,7 +111,6 @@ class PaymentServiceIntegrationTest {
 
     @Test
     void shouldFindPaymentsByOrderId() {
-        // Given
         String orderId = "order-789";
 
         Payment payment1 = new Payment();
@@ -150,10 +136,8 @@ class PaymentServiceIntegrationTest {
 
         paymentRepository.saveAll(List.of(payment1, payment2, payment3));
 
-        // When
         List<Payment> payments = paymentService.getPaymentsByOrderId(orderId);
 
-        // Then
         assertThat(payments).hasSize(2);
         assertThat(payments).allMatch(p -> p.getOrderId().equals(orderId));
         assertThat(payments).extracting(Payment::getAmount)
@@ -162,7 +146,6 @@ class PaymentServiceIntegrationTest {
 
     @Test
     void shouldFindPaymentsByUserId() {
-        // Given
         String userId = "user-999";
 
         Payment payment1 = new Payment();
@@ -188,10 +171,8 @@ class PaymentServiceIntegrationTest {
 
         paymentRepository.saveAll(List.of(payment1, payment2, payment3));
 
-        // When
         List<Payment> payments = paymentService.getPaymentsByUserId(userId);
 
-        // Then
         assertThat(payments).hasSize(2);
         assertThat(payments).allMatch(p -> p.getUserId().equals(userId));
         assertThat(payments).extracting(Payment::getOrderId)
@@ -200,7 +181,6 @@ class PaymentServiceIntegrationTest {
 
     @Test
     void shouldFindPaymentsByStatus() {
-        // Given
         Payment payment1 = new Payment();
         payment1.setUserId("user-1");
         payment1.setOrderId("order-1");
@@ -224,10 +204,8 @@ class PaymentServiceIntegrationTest {
 
         paymentRepository.saveAll(List.of(payment1, payment2, payment3));
 
-        // When
         List<Payment> completedPayments = paymentService.getPaymentsByStatus("COMPLETED");
 
-        // Then
         assertThat(completedPayments).hasSize(2);
         assertThat(completedPayments).allMatch(p -> p.getStatus().equals("COMPLETED"));
         assertThat(completedPayments).extracting(Payment::getAmount)
@@ -236,11 +214,9 @@ class PaymentServiceIntegrationTest {
 
     @Test
     void shouldCalculateTotalSumForPeriod() {
-        // Given
         LocalDateTime startDate = LocalDateTime.of(2024, 1, 1, 0, 0);
         LocalDateTime endDate = LocalDateTime.of(2024, 1, 31, 23, 59);
 
-        // Payments within period
         Payment payment1 = new Payment();
         payment1.setUserId("user-1");
         payment1.setOrderId("order-1");
@@ -255,7 +231,6 @@ class PaymentServiceIntegrationTest {
         payment2.setStatus("COMPLETED");
         payment2.setTimestamp(LocalDateTime.of(2024, 1, 20, 14, 45));
 
-        // Payment outside period
         Payment payment3 = new Payment();
         payment3.setUserId("user-3");
         payment3.setOrderId("order-3");
@@ -263,7 +238,6 @@ class PaymentServiceIntegrationTest {
         payment3.setStatus("COMPLETED");
         payment3.setTimestamp(LocalDateTime.of(2024, 2, 1, 9, 0));
 
-        // Payment with different status
         Payment payment4 = new Payment();
         payment4.setUserId("user-4");
         payment4.setOrderId("order-4");
@@ -273,21 +247,16 @@ class PaymentServiceIntegrationTest {
 
         paymentRepository.saveAll(List.of(payment1, payment2, payment3, payment4));
 
-        // When
         double totalSum = paymentService.getTotalSumForPeriod(startDate, endDate);
 
-        // Then
-        // Only payment1 and payment2 are COMPLETED and within period
-        assertThat(totalSum).isEqualTo(300.0); // 100 + 200
+        assertThat(totalSum).isEqualTo(300.0);
     }
 
     @Test
     void shouldReturnZeroTotalSumForEmptyPeriod() {
-        // Given
         LocalDateTime startDate = LocalDateTime.of(2024, 12, 1, 0, 0);
         LocalDateTime endDate = LocalDateTime.of(2024, 12, 31, 23, 59);
 
-        // All payments are from January 2024
         Payment payment = new Payment();
         payment.setUserId("user-1");
         payment.setOrderId("order-1");
@@ -297,16 +266,13 @@ class PaymentServiceIntegrationTest {
 
         paymentRepository.save(payment);
 
-        // When
         double totalSum = paymentService.getTotalSumForPeriod(startDate, endDate);
 
-        // Then
         assertThat(totalSum).isEqualTo(0.0);
     }
 
     @Test
     void shouldHandleMultipleOperationsInTransaction() {
-        // Given
         PaymentRequest paymentRequest1 = new PaymentRequest();
         paymentRequest1.setUserId("user-123");
         paymentRequest1.setOrderId("order-456");
@@ -319,14 +285,12 @@ class PaymentServiceIntegrationTest {
         paymentRequest2.setAmount(200.0);
         paymentRequest2.setTimestamp(LocalDateTime.now());
 
-        // When
         Payment payment1 = paymentService.createPayment(paymentRequest1);
         Payment payment2 = paymentService.createPayment(paymentRequest2, "COMPLETED");
 
         List<Payment> allPayments = paymentService.getPaymentsByUserId("user-123");
         List<Payment> completedPayments = paymentService.getPaymentsByStatus("COMPLETED");
 
-        // Then
         assertThat(payment1).isNotNull();
         assertThat(payment2).isNotNull();
         assertThat(allPayments).hasSize(1);
@@ -339,7 +303,6 @@ class PaymentServiceIntegrationTest {
 
     @Test
     void shouldMaintainDataConsistencyAfterMultipleCreations() {
-        // Given
         String orderId = "order-123";
 
         PaymentRequest request1 = new PaymentRequest();
@@ -360,29 +323,23 @@ class PaymentServiceIntegrationTest {
         request3.setAmount(100.0);
         request3.setTimestamp(LocalDateTime.now());
 
-        // When
         paymentService.createPayment(request1);
         paymentService.createPayment(request2, "COMPLETED");
         paymentService.createPayment(request3);
 
-        // Then
         List<Payment> payments = paymentService.getPaymentsByOrderId(orderId);
         assertThat(payments).hasSize(3);
 
-        // Verify all have same orderId
         assertThat(payments).allMatch(p -> p.getOrderId().equals(orderId));
 
-        // Verify amounts are correct
         assertThat(payments).extracting(Payment::getAmount)
                 .containsExactlyInAnyOrder(50.0, 75.0, 100.0);
 
-        // Verify statuses
         long completedCount = payments.stream()
                 .filter(p -> "COMPLETED".equals(p.getStatus()))
                 .count();
         assertThat(completedCount).isEqualTo(1);
 
-        // Verify timestamps are set
         assertThat(payments).allMatch(p -> p.getTimestamp() != null);
     }
 }
