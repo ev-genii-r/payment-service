@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="create-indexes-payments" author="evgenii">
+
+        <!-- Индекс по order_id -->
+        <createIndex indexName="idx_payments_order_id" tableName="orders">
+            <column name="order_id"/>
+        </createIndex>
+
+        <!-- Индекс по user_id -->
+        <createIndex indexName="idx_payments_user_id" tableName="orders">
+            <column name="user_id"/>
+        </createIndex>
+
+        <!-- Индекс по status -->
+        <createIndex indexName="idx_payments_status" tableName="orders">
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Индекс по timestamp -->
+        <createIndex indexName="idx_payments_timestamp" tableName="orders">
+            <column name="timestamp"/>
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

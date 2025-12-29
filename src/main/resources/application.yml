@@ -1,0 +1,21 @@
+spring:
+
+  data:
+    mongodb:
+      uri: ${PAYMENT_DB_URI}
+      port: 27017
+      database: ${PAYMENT_DB_NAME}
+
+  kafka:
+    consumer:
+      group-id: payment-service-group
+      auto-offset-reset: earliest
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.trusted.packages: "*"
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+
+server:
+  port: 8084
