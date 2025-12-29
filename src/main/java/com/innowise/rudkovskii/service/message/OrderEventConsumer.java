@@ -42,11 +42,6 @@ public class OrderEventConsumer {
         paymentEventProducer.sendPaymentCreatedEvent(response, event.getOrderId());
     }
 
-    @PostConstruct
-    public void init() {
-        System.out.println("✅ PaymentEventConsumer создан");
-    }
-
     private void processPayment(Payment payment) {
         payment.setStatus(StatusResolver.generateStatus());
     }

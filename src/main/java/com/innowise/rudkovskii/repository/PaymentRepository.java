@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PaymentRepository extends MongoRepository<Payment, String> {
@@ -25,4 +26,5 @@ public interface PaymentRepository extends MongoRepository<Payment, String> {
     Double getTotalSumByDatePeriod(@Param("startDate") LocalDateTime startDate,
                                    @Param("endDate") LocalDateTime endDate);
 
+    Optional<Payment> findPaymentByOrderId(String orderId);
 }
